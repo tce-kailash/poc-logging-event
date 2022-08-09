@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { delay, Observable, take } from 'rxjs';
+import { delay, Observable, Subject, take, takeUntil, timer } from 'rxjs';
 import { json } from './dummy-json';
-import { OptionI, PracticeI } from './mcq.interface';
+import { EventLoggerService } from './event-logger.service';
+import { EventLoggerI, OptionI, PracticeI } from './interface';
 
 @Component({
   selector: 'app-root',
@@ -20,48 +21,21 @@ export class AppComponent implements OnInit {
     questionIndex: number;
     answer: string;
   }[] = [];
-  logger: {
-    id: string;
-    label: string;
-    time?: string;
-    data?: any;
-  }[] = [];
+  logger: EventLoggerI [] = this.eventLoggerService.logger;
   isFetchingQuestion: boolean = false;
+  totalTimeSpentQuizDes$: Subject<void> = new Subject<void>();
+  totalTimeSpentQuiz$!: Observable<number>;
+  totalTimeSpentQuestion$!: Observable<number>;
 
   constructor(
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private eventLoggerService: EventLoggerService
   ){
     this.createForm();
   }
 
   ngOnInit(): void {
 
-  }
-
-  loggTime() {
-    return {
-      startTime: (id: string): void => {
-        performance.mark(id);
-      },
-      endTime: (id: string): number => {
-        return performance.measure(id, id).duration;
-      },
-      reset: (id: string): void => {
-        performance.clearMarks(id);
-        performance.clearMeasures(id);
-      },
-      loggEvent: (data: {
-        id: string,
-        label: string,
-        additionData: any
-      }): void => {
-        this.logger.push({
-          id: data.id,
-          label: data.label,
-          data: data.additionData
-        });
-      }
-    };
   }
 
   get f() {
@@ -85,6 +59,10 @@ export class AppComponent implements OnInit {
     return this.currentMcqIndex===mcqLength ? true : false;
   }
 
+  getTimer$(): Observable<number> {
+    return timer(0, 1000);
+  }
+
   getQuestion(): Observable<OptionI> {
     return new Observable<OptionI>((observer) => {
       observer.next(json.mcqs[this.currentMcqIndex]);
@@ -106,6 +84,10 @@ export class AppComponent implements OnInit {
   }
 
   onStart(): void {
+    this.totalTimeSpentQuiz$ = timer(0, 1000).pipe(
+      takeUntil(this.totalTimeSpentQuizDes$)
+    );
+    this.getTimer$();
     this.loggStartQuiz();
     this.isFetchingQuestion = true;
     this.getQuestion().subscribe((res) => {
@@ -116,59 +98,52 @@ export class AppComponent implements OnInit {
   }
 
   loggStartQuestion(): void {
+    this.totalTimeSpentQuestion$ = timer(0, 1000);
     const currentMcq = this.currentMcq as OptionI;
-    this.logger.push({
-      id: currentMcq.id,
-      label: "Question Started"
-    });
-    const loggTime = this.loggTime();
-    loggTime.startTime(currentMcq.id);
+    this.eventLoggerService.startLogging(currentMcq.id);
+    this.eventLoggerService.loggData(currentMcq.id, "Question Started")
   }
 
   loggEndQuestion(): void {
-    const loggTime = this.loggTime();
     const currentMcq = this.currentMcq as OptionI;
-    const totalTimeSpent = loggTime.endTime(currentMcq.id);
-    this.logger.push({
-      id: currentMcq.id,
-      label: "Question ended",
-      time: `${totalTimeSpent} ms`
-    });
-    loggTime.loggEvent({
-      id: currentMcq.id,
-      label: "Question Logged",
-      additionData: {
-        totalTimeSpent
-      }
-    });
-    loggTime.reset(currentMcq.id);
+    const totalTimeSpent = this.eventLoggerService.endLogging(currentMcq.id);
+    const data = {
+      totalTimeSpent 
+    };
+    this.eventLoggerService.loggData(
+      currentMcq.id,
+      "Question Ended",
+      totalTimeSpent
+    );
+    this.eventLoggerService.serverEventLogging(
+      currentMcq.id,
+      "Question Logged",
+      data
+    );
+    this.eventLoggerService.resetLogging(currentMcq.id);
   }
 
   loggStartQuiz(): void {
-    this.logger.push({
-      id: json.id,
-      label: "Quiz Player Started"
-    });
-    const loggTime = this.loggTime();
-    loggTime.startTime(json.id);
+    this.eventLoggerService.startLogging(json.id);
+    this.eventLoggerService.loggData(json.id, "Quiz Player Started")
   }
 
   loggEndQuiz(): void {
-    const loggTime = this.loggTime();
-    const totalTimeSpent = loggTime.endTime(json.id);
-    this.logger.push({
-      id: json.id,
-      label: "Quiz Player Ended",
-      time: `${totalTimeSpent} ms`
-    });
-    loggTime.loggEvent({
-      id: json.id,
-      label: "Quiz Logged",
-      additionData: {
-        totalTimeSpent
-      }
-    });
-    loggTime.reset(json.id);
+    const totalTimeSpent = this.eventLoggerService.endLogging(json.id);
+    const data = {
+      totalTimeSpent 
+    };
+    this.eventLoggerService.loggData(
+      json.id,
+      "Quiz Player Ended",
+      totalTimeSpent
+    );
+    this.eventLoggerService.serverEventLogging(
+      json.id,
+      "Quiz Logged",
+      data
+    );
+    this.eventLoggerService.resetLogging(json.id);
   }
 
   onNextQuestion(): void {
@@ -217,6 +192,7 @@ export class AppComponent implements OnInit {
   }
 
   onSubmitQuiz(): void {
+    this.totalTimeSpentQuizDes$.next();
     this.isQuizSubmitted = true;
     this.loggEndQuiz();
   }

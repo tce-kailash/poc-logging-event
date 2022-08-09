@@ -4,10 +4,12 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MinuteSecondsPipe } from './minuteSeconds.pipe';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    MinuteSecondsPipe
   ],
   imports: [
     BrowserModule,

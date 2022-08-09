@@ -3,7 +3,8 @@
         <div class="col-8">
             <div class="card mb-3 mt-3">
                 <div class="card-header">
-                    <h3>Practice Player</h3>
+                    <h3 class="float-start m-0">Practice Player</h3>
+                    <span class="float-end">{{totalTimeSpentQuiz$ | async | minuteSeconds}}</span>
                 </div>
                 <div class="card-body py-2">
                     <ng-container *ngIf="!currentMcq && !isQuizSubmitted">
@@ -23,13 +24,11 @@
         </div>
         <div class="col-4">
             <div class="mt-3">
-                <pre class="bg-light p-2 rounded max-360">{{logger | json}}</pre>
+                <pre class="card bg-light p-2 rounded max-360">{{logger | json}}</pre>
             </div>
         </div>
     </div>
 </div>
-
-
 
 <ng-template #startPlayerTemplate>
     <div class="text-center" >
@@ -40,33 +39,31 @@
 </ng-template>
 
 <ng-template #questionTemplate let-question="question" let-options="options">
-    <div>
-        <form [formGroup]="form" (ngSubmit)="onSubmit()">
-            <h5>{{json.title}}</h5>
-            <div class="bg-light p-2 rounded border">
-                <h6>{{question}}</h6>
-                <ng-container *ngFor="let mcq of options" >
-                    <div class="form-check">
-                        <input style="cursor: pointer" formControlName="option" class="form-check-input" type="radio" name="option" [value]="mcq.id" [id]="mcq.id">
-                        <label style="cursor: pointer" class="form-check-label" [for]="mcq.id">
-                            {{mcq.label}}
-                        </label>
-                    </div>
-                </ng-container>
-            </div>
-            <div class="text-end mt-2">
-                <button [disabled]="!f.valid" type="submit" class="btn btn-dark">Submit</button>
-            </div>
-            <div *ngIf="isFetchingQuestion" class="overlay">
-                <div class="spinner-border spinner-center" role="status">
-                    <span class="visually-hidden">Loading...</span>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <div style="display: flow-root">
+            <h5 class="float-start">{{json.title}}</h5>
+            <span class="float-end">{{totalTimeSpentQuestion$ | async | minuteSeconds}}</span>
+        </div>
+        <div class="bg-light p-2 rounded border">
+            <h6>{{question}}</h6>
+            <ng-container *ngFor="let mcq of options" >
+                <div class="form-check">
+                    <input style="cursor: pointer" formControlName="option" class="form-check-input" type="radio" name="option" [value]="mcq.id" [id]="mcq.id">
+                    <label style="cursor: pointer" class="form-check-label" [for]="mcq.id">
+                        {{mcq.label}}
+                    </label>
                 </div>
+            </ng-container>
+        </div>
+        <div class="text-end mt-2">
+            <button [disabled]="!f.valid" type="submit" class="btn btn-dark">Submit</button>
+        </div>
+        <div *ngIf="isFetchingQuestion" class="overlay">
+            <div class="spinner-border spinner-center" role="status">
+                <span class="visually-hidden">Loading...</span>
             </div>
-        </form>
-        <!-- <div style="position: relative" > -->
-            
-        <!-- </div> -->
-    </div>
+        </div>
+    </form>
 </ng-template>
 
 <ng-template #playerControlTemplate>
