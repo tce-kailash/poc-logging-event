@@ -23,9 +23,24 @@
             </div>
         </div>
         <div class="col-4">
-            <div class="mt-3">
-                <pre class="card bg-light p-2 rounded max-360">{{logger | json}}</pre>
+            <div class="card mb-3 mt-3" *ngIf="isLoggedStarted">
+                <div class="card-header">
+                    <h3 class="float-start m-0">Event Logging</h3>
+                </div>
+                <div class="card-body py-2">
+                    <div>
+                        show logg:  <b>"slog"</b>
+                    </div>
+                    <div>
+                        hide logg: <b>"hlog"</b>
+                    </div>
+                    <pre class="max-360 mt-2">{{logger | json}}</pre>
+                </div>
             </div>
+            <!-- <div class="mt-3" *ngIf="isLoggedStarted">
+                <span>Hello</span>
+                <pre class="card bg-light p-2 rounded max-360">{{logger | json}}</pre>
+            </div> -->
         </div>
     </div>
 </div>

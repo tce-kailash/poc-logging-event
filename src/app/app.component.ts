@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { delay, Observable, Subject, take, takeUntil, timer } from 'rxjs';
 import { json } from './dummy-json';
@@ -11,6 +11,22 @@ import { EventLoggerI, OptionI, PracticeI } from './interface';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
+  loggedKeys: string[] = [];
+  isLoggedStarted: boolean = true;
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    this.loggedKeys.push(event.key);
+    const checklog = this.loggedKeys.slice(-4, this.loggedKeys.length).join("");
+    if(checklog==="slog" && !this.isLoggedStarted){
+      this.isLoggedStarted = true;
+      console.log("Start Log");
+    }
+    if(checklog==="hlog" && this.isLoggedStarted){
+      this.isLoggedStarted = false;
+      console.log("Hide Log");
+    }
+  }
+
   title = 'zone-js';
   form!: FormGroup;
   json: PracticeI = json;

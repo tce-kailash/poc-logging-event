@@ -6,6 +6,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MinuteSecondsPipe } from './minuteSeconds.pipe';
 
+
 @NgModule({
   declarations: [
     AppComponent,
